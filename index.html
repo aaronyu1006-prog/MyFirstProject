@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>我的記帳本</title>
+  <title>Aaron記帳小本本</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -153,7 +153,6 @@
     }
     .filter-bar select:focus { outline: none; border-color: var(--purple); }
 
-    /* ── Cards list (replaces table on mobile) ── */
     .tx-list { display: flex; flex-direction: column; gap: .6rem; }
     .tx-item {
       background: var(--white);
@@ -191,7 +190,6 @@
     }
     .empty-icon { font-size: 2.5rem; margin-bottom: .5rem; }
 
-    /* ── Pill badge ── */
     .badge {
       display: inline-block; padding: .15rem .6rem;
       border-radius: 999px; font-size: .7rem; font-weight: 700;
@@ -199,13 +197,11 @@
     .badge.income  { background: #ecfdf5; color: var(--green); }
     .badge.expense { background: #fff1f2; color: var(--red); }
 
-    /* ── Tablet ── */
     @media (max-width: 900px) {
       .main { grid-template-columns: 1fr; }
       .form-section { position: static; }
     }
 
-    /* ── Mobile ── */
     @media (max-width: 600px) {
       .page { padding: 1rem; }
       .summary { grid-template-columns: 1fr; gap: .75rem; }
@@ -223,7 +219,7 @@
 <header>
   <div class="header-inner">
     <div>
-      <h1>💰 我的記帳本</h1>
+      <h1>💰 Aaron記帳小本本</h1>
       <div class="tagline">掌握每一分錢的流向</div>
     </div>
   </div>
