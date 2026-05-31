@@ -5,48 +5,103 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Personal Accounting</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: sans-serif; background: #f0f2f5; color: #333; }
-    header { background: #2c3e50; color: #fff; padding: 1rem 2rem; }
-    header h1 { font-size: 1.4rem; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    .summary { display: flex; gap: 1rem; padding: 1.5rem 2rem; }
-    .card { flex: 1; background: #fff; border-radius: 8px; padding: 1rem 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
-    .card h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: #888; margin-bottom: .4rem; }
-    .card .amount { font-size: 1.6rem; font-weight: bold; }
-    .card.balance .amount { color: #2c3e50; }
-    .card.income  .amount { color: #27ae60; }
-    .card.expense .amount { color: #e74c3c; }
+    :root {
+      --bg: #f0f2f5;
+      --white: #fff;
+      --dark: #2c3e50;
+      --green: #27ae60;
+      --red: #e74c3c;
+      --muted: #888;
+      --border: #ddd;
+      --radius: 8px;
+      --shadow: 0 1px 4px rgba(0,0,0,.1);
+    }
 
-    .main { display: flex; gap: 1rem; padding: 0 2rem 2rem; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: #333; min-height: 100vh; }
 
-    .form-section { background: #fff; border-radius: 8px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.1); width: 320px; flex-shrink: 0; align-self: flex-start; }
+    /* ── Header ── */
+    header { background: var(--dark); color: #fff; padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+    header h1 { font-size: clamp(1rem, 4vw, 1.4rem); }
+
+    /* ── Summary cards ── */
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .75rem;
+      padding: 1.25rem 1.5rem;
+    }
+    .card { background: var(--white); border-radius: var(--radius); padding: 1rem 1.25rem; box-shadow: var(--shadow); }
+    .card h2 { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: .35rem; }
+    .card .amount { font-size: clamp(1.1rem, 4vw, 1.6rem); font-weight: bold; }
+    .card.balance .amount { color: var(--dark); }
+    .card.income  .amount { color: var(--green); }
+    .card.expense .amount { color: var(--red); }
+
+    /* ── Main layout ── */
+    .main { display: grid; grid-template-columns: 300px 1fr; gap: 1rem; padding: 0 1.5rem 2rem; align-items: start; }
+
+    /* ── Form ── */
+    .form-section { background: var(--white); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); }
     .form-section h2 { margin-bottom: 1rem; font-size: 1rem; }
-    .form-section label { display: block; font-size: .85rem; margin-bottom: .25rem; color: #555; }
-    .form-section input, .form-section select { width: 100%; padding: .5rem .75rem; border: 1px solid #ddd; border-radius: 6px; font-size: .95rem; margin-bottom: .9rem; }
-    .form-section button { width: 100%; padding: .65rem; background: #2c3e50; color: #fff; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+    .form-section label { display: block; font-size: .82rem; margin-bottom: .2rem; color: #555; }
+    .form-section input,
+    .form-section select {
+      width: 100%; padding: .55rem .75rem;
+      border: 1px solid var(--border); border-radius: 6px;
+      font-size: .95rem; margin-bottom: .85rem;
+      background: #fff;
+    }
+    .form-section input:focus,
+    .form-section select:focus { outline: 2px solid var(--dark); outline-offset: 1px; }
+    .form-section button {
+      width: 100%; padding: .7rem;
+      background: var(--dark); color: #fff;
+      border: none; border-radius: 6px;
+      font-size: 1rem; cursor: pointer;
+      min-height: 44px;
+    }
     .form-section button:hover { background: #1a252f; }
 
-    .transactions { flex: 1; }
+    /* ── Transactions ── */
     .transactions h2 { font-size: 1rem; margin-bottom: .75rem; }
-    .filter-bar { display: flex; gap: .5rem; margin-bottom: 1rem; }
-    .filter-bar select { padding: .4rem .6rem; border: 1px solid #ddd; border-radius: 6px; font-size: .85rem; }
+    .filter-bar { display: flex; gap: .5rem; margin-bottom: .75rem; flex-wrap: wrap; }
+    .filter-bar select {
+      padding: .45rem .65rem;
+      border: 1px solid var(--border); border-radius: 6px;
+      font-size: .85rem; background: #fff;
+      min-height: 36px;
+    }
 
-    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
-    thead { background: #2c3e50; color: #fff; }
-    th, td { padding: .75rem 1rem; text-align: left; font-size: .9rem; }
+    /* Table — scrollable wrapper on small screens */
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--radius); box-shadow: var(--shadow); }
+    table { width: 100%; border-collapse: collapse; background: var(--white); min-width: 460px; }
+    thead { background: var(--dark); color: #fff; }
+    th, td { padding: .7rem 1rem; text-align: left; font-size: .88rem; white-space: nowrap; }
+    td.desc-cell { white-space: normal; word-break: break-word; min-width: 120px; }
     tbody tr:nth-child(even) { background: #f8f9fa; }
     tbody tr:hover { background: #eef1f5; }
-    td.income  { color: #27ae60; font-weight: bold; }
-    td.expense { color: #e74c3c; font-weight: bold; }
-    .del-btn { background: none; border: none; cursor: pointer; color: #aaa; font-size: 1rem; }
-    .del-btn:hover { color: #e74c3c; }
-    .empty { text-align: center; padding: 2rem; color: #aaa; font-size: .9rem; }
+    td.income  { color: var(--green); font-weight: bold; }
+    td.expense { color: var(--red);   font-weight: bold; }
+    .del-btn { background: none; border: none; cursor: pointer; color: #aaa; font-size: 1.05rem; padding: .25rem .5rem; border-radius: 4px; min-height: 36px; min-width: 36px; }
+    .del-btn:hover { color: var(--red); background: #fdecea; }
+    .empty { text-align: center; padding: 2rem; color: #aaa; font-size: .9rem; white-space: normal; }
 
-    @media (max-width: 640px) {
-      .summary { flex-direction: column; padding: 1rem; }
-      .main { flex-direction: column; padding: 0 1rem 1rem; }
+    /* ── Tablet (≤900px): collapse side-by-side into stacked ── */
+    @media (max-width: 900px) {
+      .main { grid-template-columns: 1fr; }
       .form-section { width: 100%; }
+    }
+
+    /* ── Mobile (≤600px) ── */
+    @media (max-width: 600px) {
+      .summary { grid-template-columns: 1fr; gap: .5rem; padding: 1rem; }
+      .main { padding: 0 1rem 1.5rem; gap: .75rem; }
+      .card { padding: .85rem 1rem; display: flex; align-items: center; justify-content: space-between; }
+      .card h2 { margin-bottom: 0; }
+      .card .amount { font-size: 1.2rem; }
+      th, td { padding: .6rem .75rem; font-size: .82rem; }
     }
   </style>
 </head>
@@ -108,18 +163,20 @@
         <option>Other</option>
       </select>
     </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Description</th>
-          <th>Category</th>
-          <th>Amount</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="txBody"></tbody>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="txBody"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -131,9 +188,7 @@
     catch { return []; }
   }
 
-  function save(data) {
-    localStorage.setItem(STORE_KEY, JSON.stringify(data));
-  }
+  function save(data) { localStorage.setItem(STORE_KEY, JSON.stringify(data)); }
 
   function fmt(n) {
     return '$' + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -146,9 +201,9 @@
     const type     = document.getElementById('type').value;
     const date     = document.getElementById('date').value;
 
-    if (!desc)          return alert('Please enter a description.');
+    if (!desc)               return alert('Please enter a description.');
     if (!amount || amount <= 0) return alert('Please enter a valid amount.');
-    if (!date)          return alert('Please select a date.');
+    if (!date)               return alert('Please select a date.');
 
     const txns = load();
     txns.push({ id: Date.now(), desc, amount, category, type, date });
@@ -156,7 +211,7 @@
 
     document.getElementById('desc').value   = '';
     document.getElementById('amount').value = '';
-    document.getElementById('date').value   = '';
+    document.getElementById('date').value   = new Date().toISOString().split('T')[0];
     render();
   }
 
@@ -172,14 +227,15 @@
 
     const income  = txns.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
     const expense = txns.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const bal     = income - expense;
 
     document.getElementById('totalIncome').textContent  = fmt(income);
     document.getElementById('totalExpense').textContent = fmt(expense);
-    document.getElementById('balance').textContent      = (income - expense >= 0 ? '' : '-') + fmt(income - expense);
+    document.getElementById('balance').textContent      = (bal < 0 ? '-' : '') + fmt(bal);
+    document.getElementById('balance').style.color      = bal < 0 ? 'var(--red)' : 'var(--dark)';
 
     if (filterType !== 'all') txns = txns.filter(t => t.type === filterType);
     if (filterCat  !== 'all') txns = txns.filter(t => t.category === filterCat);
-
     txns.sort((a, b) => b.date.localeCompare(a.date));
 
     const body = document.getElementById('txBody');
@@ -190,14 +246,13 @@
     body.innerHTML = txns.map(t => `
       <tr>
         <td>${t.date}</td>
-        <td>${t.desc}</td>
+        <td class="desc-cell">${t.desc}</td>
         <td>${t.category}</td>
         <td class="${t.type}">${t.type === 'income' ? '+' : '-'}${fmt(t.amount)}</td>
         <td><button class="del-btn" onclick="deleteTransaction(${t.id})" title="Delete">&#x2715;</button></td>
       </tr>`).join('');
   }
 
-  // Set default date to today
   document.getElementById('date').value = new Date().toISOString().split('T')[0];
   render();
 </script>
