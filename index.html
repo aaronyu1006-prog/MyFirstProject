@@ -3,10 +3,203 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My First Project</title>
+  <title>Personal Accounting</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #f0f2f5; color: #333; }
+    header { background: #2c3e50; color: #fff; padding: 1rem 2rem; }
+    header h1 { font-size: 1.4rem; }
+
+    .summary { display: flex; gap: 1rem; padding: 1.5rem 2rem; }
+    .card { flex: 1; background: #fff; border-radius: 8px; padding: 1rem 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+    .card h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: #888; margin-bottom: .4rem; }
+    .card .amount { font-size: 1.6rem; font-weight: bold; }
+    .card.balance .amount { color: #2c3e50; }
+    .card.income  .amount { color: #27ae60; }
+    .card.expense .amount { color: #e74c3c; }
+
+    .main { display: flex; gap: 1rem; padding: 0 2rem 2rem; }
+
+    .form-section { background: #fff; border-radius: 8px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.1); width: 320px; flex-shrink: 0; align-self: flex-start; }
+    .form-section h2 { margin-bottom: 1rem; font-size: 1rem; }
+    .form-section label { display: block; font-size: .85rem; margin-bottom: .25rem; color: #555; }
+    .form-section input, .form-section select { width: 100%; padding: .5rem .75rem; border: 1px solid #ddd; border-radius: 6px; font-size: .95rem; margin-bottom: .9rem; }
+    .form-section button { width: 100%; padding: .65rem; background: #2c3e50; color: #fff; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+    .form-section button:hover { background: #1a252f; }
+
+    .transactions { flex: 1; }
+    .transactions h2 { font-size: 1rem; margin-bottom: .75rem; }
+    .filter-bar { display: flex; gap: .5rem; margin-bottom: 1rem; }
+    .filter-bar select { padding: .4rem .6rem; border: 1px solid #ddd; border-radius: 6px; font-size: .85rem; }
+
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+    thead { background: #2c3e50; color: #fff; }
+    th, td { padding: .75rem 1rem; text-align: left; font-size: .9rem; }
+    tbody tr:nth-child(even) { background: #f8f9fa; }
+    tbody tr:hover { background: #eef1f5; }
+    td.income  { color: #27ae60; font-weight: bold; }
+    td.expense { color: #e74c3c; font-weight: bold; }
+    .del-btn { background: none; border: none; cursor: pointer; color: #aaa; font-size: 1rem; }
+    .del-btn:hover { color: #e74c3c; }
+    .empty { text-align: center; padding: 2rem; color: #aaa; font-size: .9rem; }
+
+    @media (max-width: 640px) {
+      .summary { flex-direction: column; padding: 1rem; }
+      .main { flex-direction: column; padding: 0 1rem 1rem; }
+      .form-section { width: 100%; }
+    }
+  </style>
 </head>
 <body>
-  <h1>Hello, World!</h1>
-  <p>Welcome to My First Project.</p>
+
+<header>
+  <h1>Personal Accounting</h1>
+</header>
+
+<div class="summary">
+  <div class="card balance"><h2>Balance</h2><div class="amount" id="balance">$0.00</div></div>
+  <div class="card income"><h2>Total Income</h2><div class="amount" id="totalIncome">$0.00</div></div>
+  <div class="card expense"><h2>Total Expenses</h2><div class="amount" id="totalExpense">$0.00</div></div>
+</div>
+
+<div class="main">
+  <div class="form-section">
+    <h2>Add Transaction</h2>
+    <label>Description</label>
+    <input type="text" id="desc" placeholder="e.g. Groceries">
+    <label>Amount ($)</label>
+    <input type="number" id="amount" placeholder="0.00" min="0.01" step="0.01">
+    <label>Category</label>
+    <select id="category">
+      <option>Food</option>
+      <option>Housing</option>
+      <option>Transport</option>
+      <option>Entertainment</option>
+      <option>Health</option>
+      <option>Salary</option>
+      <option>Other</option>
+    </select>
+    <label>Type</label>
+    <select id="type">
+      <option value="income">Income</option>
+      <option value="expense">Expense</option>
+    </select>
+    <label>Date</label>
+    <input type="date" id="date">
+    <button onclick="addTransaction()">Add Transaction</button>
+  </div>
+
+  <div class="transactions">
+    <h2>Transactions</h2>
+    <div class="filter-bar">
+      <select id="filterType" onchange="render()">
+        <option value="all">All Types</option>
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+      </select>
+      <select id="filterCategory" onchange="render()">
+        <option value="all">All Categories</option>
+        <option>Food</option>
+        <option>Housing</option>
+        <option>Transport</option>
+        <option>Entertainment</option>
+        <option>Health</option>
+        <option>Salary</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Category</th>
+          <th>Amount</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="txBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const STORE_KEY = 'pa_transactions';
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function save(data) {
+    localStorage.setItem(STORE_KEY, JSON.stringify(data));
+  }
+
+  function fmt(n) {
+    return '$' + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function addTransaction() {
+    const desc     = document.getElementById('desc').value.trim();
+    const amount   = parseFloat(document.getElementById('amount').value);
+    const category = document.getElementById('category').value;
+    const type     = document.getElementById('type').value;
+    const date     = document.getElementById('date').value;
+
+    if (!desc)          return alert('Please enter a description.');
+    if (!amount || amount <= 0) return alert('Please enter a valid amount.');
+    if (!date)          return alert('Please select a date.');
+
+    const txns = load();
+    txns.push({ id: Date.now(), desc, amount, category, type, date });
+    save(txns);
+
+    document.getElementById('desc').value   = '';
+    document.getElementById('amount').value = '';
+    document.getElementById('date').value   = '';
+    render();
+  }
+
+  function deleteTransaction(id) {
+    save(load().filter(t => t.id !== id));
+    render();
+  }
+
+  function render() {
+    const filterType = document.getElementById('filterType').value;
+    const filterCat  = document.getElementById('filterCategory').value;
+    let txns = load();
+
+    const income  = txns.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const expense = txns.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+    document.getElementById('totalIncome').textContent  = fmt(income);
+    document.getElementById('totalExpense').textContent = fmt(expense);
+    document.getElementById('balance').textContent      = (income - expense >= 0 ? '' : '-') + fmt(income - expense);
+
+    if (filterType !== 'all') txns = txns.filter(t => t.type === filterType);
+    if (filterCat  !== 'all') txns = txns.filter(t => t.category === filterCat);
+
+    txns.sort((a, b) => b.date.localeCompare(a.date));
+
+    const body = document.getElementById('txBody');
+    if (!txns.length) {
+      body.innerHTML = '<tr><td colspan="5" class="empty">No transactions yet.</td></tr>';
+      return;
+    }
+    body.innerHTML = txns.map(t => `
+      <tr>
+        <td>${t.date}</td>
+        <td>${t.desc}</td>
+        <td>${t.category}</td>
+        <td class="${t.type}">${t.type === 'income' ? '+' : '-'}${fmt(t.amount)}</td>
+        <td><button class="del-btn" onclick="deleteTransaction(${t.id})" title="Delete">&#x2715;</button></td>
+      </tr>`).join('');
+  }
+
+  // Set default date to today
+  document.getElementById('date').value = new Date().toISOString().split('T')[0];
+  render();
+</script>
 </body>
 </html>
